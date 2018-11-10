@@ -71,3 +71,7 @@ level
           |----- audioSampleRate
           |----- audioChannelCount
 ```
+
+## Used compoments
+[AVLTree](https://github.com/w8r/avl)  
+[flv.js](https://github.com/esterTion/flv.js/) (Modified fork)  
