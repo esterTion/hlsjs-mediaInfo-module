@@ -34,7 +34,7 @@ const source = require('vinyl-source-stream');
 function doWatchify() {
     let customOpts = {
         entries: 'src/index.js',
-        standalone: 'hlsjsMediaInfo',
+        standalone: 'HlsjsMediaInfoModule',
         debug: true,
         transform: ['babelify', 'browserify-versionify'],
         plugin: ['browserify-derequire']
@@ -94,7 +94,7 @@ gulp.task('lint', function () {
 gulp.task('build', ['clean', 'lint'], function () {
     let b = browserify({
         entries: 'src/index.js',
-        standalone: 'hlsjsMediaInfo',
+        standalone: 'HlsjsMediaInfoModule',
         debug: true,
         transform: ['babelify', 'browserify-versionify'],
         plugin: ['browserify-derequire']

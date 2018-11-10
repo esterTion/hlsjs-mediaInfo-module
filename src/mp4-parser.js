@@ -101,29 +101,6 @@ function esdsParse(parent, array, index) {
     }
 }
 
-function boxInfo(uintarr, index) {
-    let boxSize = ReadBig32(uintarr, index);
-    let boxName = ReadString(uintarr, index + 4, 4);
-    let boxHeadSize = 8;
-    if (boxSize == 1) {
-        boxSize = ReadBig64(uintarr, index + 8);
-        boxHeadSize = 16;
-    }
-    let fullyLoaded = uintarr.length >= (index + boxSize);
-    if (boxSize == 0)
-        return {
-            size: 8,
-            headSize: boxHeadSize,
-            name: '',
-            fullyLoaded: true
-        };
-    return {
-        size: boxSize,
-        headSize: boxHeadSize,
-        name: boxName,
-        fullyLoaded: fullyLoaded
-    };
-}
 const containerBox = [
     'moov',
     'trak',
@@ -134,14 +111,37 @@ const containerBox = [
     'traf'
 ];
 class MP4Parser {
-    parseMoov(parent, data, index, length) {
+    static boxInfo(uintarr, index) {
+        let boxSize = ReadBig32(uintarr, index);
+        let boxName = ReadString(uintarr, index + 4, 4);
+        let boxHeadSize = 8;
+        if (boxSize == 1) {
+            boxSize = ReadBig64(uintarr, index + 8);
+            boxHeadSize = 16;
+        }
+        let fullyLoaded = uintarr.length >= (index + boxSize);
+        if (boxSize == 0)
+            return {
+                size: 8,
+                headSize: boxHeadSize,
+                name: '',
+                fullyLoaded: true
+            };
+        return {
+            size: boxSize,
+            headSize: boxHeadSize,
+            name: boxName,
+            fullyLoaded: fullyLoaded
+        };
+    }
+    static parseMoov(parent, data, index, length) {
         let offset = 0;
         while (offset < length) {
-            let box = boxInfo(data, index + offset);
+            let box = MP4Parser.boxInfo(data, index + offset);
             if (containerBox.indexOf(box.name) !== -1) {
                 parent[box.name] = parent[box.name] || [];
                 parent[box.name].push({});
-                parseMoov(parent[box.name][parent[box.name].length - 1], data, index + offset + 8, box.size - 8);
+                MP4Parser.parseMoov(parent[box.name][parent[box.name].length - 1], data, index + offset + 8, box.size - 8);
             } else {
                 let body;
                 switch (box.name) {
@@ -248,7 +248,7 @@ class MP4Parser {
                     case 'stsd': {
                         parent[box.name] = parent[box.name] || [];
                         parent[box.name].push({});
-                        parseMoov(parent[box.name][parent[box.name].length - 1], data, index + offset + 16, box.size - 16);
+                        MP4Parser.parseMoov(parent[box.name][parent[box.name].length - 1], data, index + offset + 16, box.size - 16);
                         break;
                     }
                     case 'avc1': {
@@ -287,7 +287,7 @@ class MP4Parser {
                             colorTableID,
                             extensions: {}
                         };
-                        parseMoov(parent[box.name].extensions, data, index + offset + 86, box.size - 86);
+                        MP4Parser.parseMoov(parent[box.name].extensions, data, index + offset + 86, box.size - 86);
                         break;
                     }
                     case 'avcC': {
@@ -361,7 +361,7 @@ class MP4Parser {
                             sampleRate,
                             extensions: {}
                         };
-                        parseMoov(parent[box.name].extensions, data, index + offset + 36, box.size - 36);
+                        MP4Parser.parseMoov(parent[box.name].extensions, data, index + offset + 36, box.size - 36);
                         break;
                     }
                     case 'esds': {
